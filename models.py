@@ -36,7 +36,7 @@ class MLPModel(nn.Module):
         self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(64, 32)
         self.relu2 = nn.ReLU()
-        self.fc3 = nn.Linear(32, 1)  # Single output for regression
+        self.fc3 = nn.Linear(32, 1)
 
     def forward(self, x):
         out = self.fc1(x)
