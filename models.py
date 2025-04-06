@@ -60,3 +60,4 @@ def l2_regularization(model, lambda_l2):
     """
     l2_norm = sum(p.pow(2).sum() for p in model.parameters())
     return lambda_l2 * l2_norm
+
