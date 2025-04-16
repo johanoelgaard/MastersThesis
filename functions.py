@@ -75,3 +75,11 @@ def extract_nace(row, cols):
             combined |= extract_from_text(cell_value)
     # Sort by numeric value using Decimal
     return sorted(combined, key=lambda x: Decimal(x))
+
+
+
+def rolling_beta(g):
+    g = g.sort_index()
+    cov = g['stkre'].rolling('365D').cov(g['mktre'], ddof=0)
+    var = g['mktre'].rolling('365D').var()
+    return cov.divide(var)
