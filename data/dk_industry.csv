@@ -1,4 +1,4 @@
-NACE,date,Gross output (sales),Intermediate consumption,Investment,Production index,Value-added output
+NACE,timestamp,grossoutput,intercons,invest,prodind,valaddoutput
 1,2001-03-31,36.475,22.89,32.443333333333335,102.755,13.58
 1,2001-06-30,37.47,23.705,32.40333333333333,104.14,13.764999999999999
 1,2001-09-30,39.599999999999994,25.14,32.3,106.23,14.459999999999999
