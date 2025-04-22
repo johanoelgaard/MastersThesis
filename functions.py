@@ -83,3 +83,12 @@ def rolling_beta(g):
     cov = g['stkre'].rolling('365D').cov(g['mktre'], ddof=0)
     var = g['mktre'].rolling('365D').var()
     return cov.divide(var)
+
+
+def expand_monthly(row):
+    # build a monthly DateTimeIndex from timestamp up to (but not including) period_end
+    return pd.date_range(
+        start=row.timestamp,
+        end=row.period_end - pd.DateOffset(days=1),
+        freq='ME'
+    )
