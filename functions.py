@@ -272,93 +272,93 @@ def perm( Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
 
     return Z
 
-def export_to_latex(
-    results_list: list,
-    col_headers: list,
-    var_names_list: list,
-    filename: str = None,
-    label_x: list = None,
-    **kwargs
-) -> None:
-    """
-    Exports regression results to a LaTeX table and saves it as a .txt file.
+# def export_to_latex(
+#     results_list: list,
+#     col_headers: list,
+#     var_names_list: list,
+#     filename: str = None,
+#     label_x: list = None,
+#     **kwargs
+# ) -> None:
+#     """
+#     Exports regression results to a LaTeX table and saves it as a .txt file.
 
-    Args:
-        results_list (list): List of result dictionaries from the estimate function.
-        col_headers (list): List of column headers (e.g., ['OLS', 'FE', 'FD']).
-        var_names_list (list): List of lists of variable names for each result.
-        filename (str): The filename to save the LaTeX table (should end with .txt).
-        label_x (list, optional): List of variable names to include in the table in desired order.
-    """
-    num_models = len(results_list)
+#     Args:
+#         results_list (list): List of result dictionaries from the estimate function.
+#         col_headers (list): List of column headers (e.g., ['OLS', 'FE', 'FD']).
+#         var_names_list (list): List of lists of variable names for each result.
+#         filename (str): The filename to save the LaTeX table (should end with .txt).
+#         label_x (list, optional): List of variable names to include in the table in desired order.
+#     """
+#     num_models = len(results_list)
 
-    # Generate the list of all variables to include in the table
-    if label_x is None:
-        label_x = var_names_list[0]  # default to variables from the first model
+#     # Generate the list of all variables to include in the table
+#     if label_x is None:
+#         label_x = var_names_list[0]  # default to variables from the first model
 
-    # Start constructing the LaTeX table
-    lines = []
+#     # Start constructing the LaTeX table
+#     lines = []
 
-    lines.append("\\begin{tabular}{" + "l" + "c" * num_models + "}")
-    lines.append("\\hline\\hline\\\\[-1.8ex]")
-    header_row = [""] + col_headers
-    lines.append(" & ".join(header_row) + " \\\\")
-    lines.append("\\hline")
+#     lines.append("\\begin{tabular}{" + "l" + "c" * num_models + "}")
+#     lines.append("\\hline\\hline\\\\[-1.8ex]")
+#     header_row = [""] + col_headers
+#     lines.append(" & ".join(header_row) + " \\\\")
+#     lines.append("\\hline")
 
-    # For each variable in label_x
-    for var_name in label_x:
-        estimate_row = [var_name]
-        se_row = ['']
-        for result, var_names in zip(results_list, var_names_list):
-            if var_name in var_names:
-                idx = var_names.index(var_name)
-                b_hat = result.get('b_hat')[idx][0]
-                se = result.get('se')[idx][0]
-                wald = result.get('wald')[idx][0]
+#     # For each variable in label_x
+#     for var_name in label_x:
+#         estimate_row = [var_name]
+#         se_row = ['']
+#         for result, var_names in zip(results_list, var_names_list):
+#             if var_name in var_names:
+#                 idx = var_names.index(var_name)
+#                 b_hat = result.get('b_hat')[idx][0]
+#                 se = result.get('se')[idx][0]
+#                 wald = result.get('wald')[idx][0]
 
-                # Calculate p-value from wald
-                p_value = 1 - chi2.cdf(wald, result.get('b_hat')[idx].shape[0])
+#                 # Calculate p-value from wald
+#                 p_value = 1 - chi2.cdf(wald, result.get('b_hat')[idx].shape[0])
 
-                # Determine the number of stars based on p-value
-                if p_value < 0.01:
-                    stars = '***'
-                elif p_value < 0.05:
-                    stars = '**'
-                elif p_value < 0.10:
-                    stars = '*'
-                else:
-                    stars = ''
+#                 # Determine the number of stars based on p-value
+#                 if p_value < 0.01:
+#                     stars = '***'
+#                 elif p_value < 0.05:
+#                     stars = '**'
+#                 elif p_value < 0.10:
+#                     stars = '*'
+#                 else:
+#                     stars = ''
 
-                # Append coefficient with stars
-                estimate_row.append(f"{b_hat:.4f}{stars}")
-                # Append standard error in parentheses
-                se_row.append(f"({se:.4f})")
-            else:
-                # Variable not in this model
-                estimate_row.append("")
-                se_row.append("")
+#                 # Append coefficient with stars
+#                 estimate_row.append(f"{b_hat:.4f}{stars}")
+#                 # Append standard error in parentheses
+#                 se_row.append(f"({se:.4f})")
+#             else:
+#                 # Variable not in this model
+#                 estimate_row.append("")
+#                 se_row.append("")
 
-        # Write estimate row
-        lines.append(" & ".join(estimate_row) + " \\\\[-1ex]")
-        # Write standard error row
-        lines.append(" & \\footnotesize".join(se_row) + " \\\\")
+#         # Write estimate row
+#         lines.append(" & ".join(estimate_row) + " \\\\[-1ex]")
+#         # Write standard error row
+#         lines.append(" & \\footnotesize".join(se_row) + " \\\\")
 
-    # Additional statistics
-    lines.append("\\hline")
-    statistics = ["R-squared"] + [f"{result.get('R2').item():.3f}" for result in results_list]
-    lines.append(" & ".join(statistics) + " \\\\")
-    lines.append("\\hline\\hline")
+#     # Additional statistics
+#     lines.append("\\hline")
+#     statistics = ["R-squared"] + [f"{result.get('R2').item():.3f}" for result in results_list]
+#     lines.append(" & ".join(statistics) + " \\\\")
+#     lines.append("\\hline\\hline")
 
-    # End of table
-    lines.append("\\end{tabular}")
+#     # End of table
+#     lines.append("\\end{tabular}")
 
-    # Save to file if filename is provided else return the table as a string
-    if filename:
-        with open(filename, 'w') as f:
-            f.write("\n".join(lines))
-        print(f"LaTeX table saved to {filename}")
-    else:
-        return "\n".join(lines)
+#     # Save to file if filename is provided else return the table as a string
+#     if filename:
+#         with open(filename, 'w') as f:
+#             f.write("\n".join(lines))
+#         print(f"LaTeX table saved to {filename}")
+#     else:
+#         return "\n".join(lines)
 
 # Create function to check rank of demeaned matrix, and return its eigenvalues.
 def check_rank(x):
@@ -446,3 +446,100 @@ def serial_corr(y, x, T):
     
     # calculate the serial correlation
     return estimate(e, e_l,T=T-1,robust=True)
+
+
+def diebold_mariano_test(actuals, forecast1, forecast2, loss_function='mse', h=1):
+    """
+    Performs the Diebold-Mariano test for predictive accuracy.
+
+    Args:
+        actuals (array): Actual observed values.
+        forecast1 (array): First forecast to compare.
+        forecast2 (array): Second forecast to compare.
+        loss_function (str): The loss function to use ('mse' or 'mae').
+        h (int): Forecast horizon, default is 1 (single-step forecast).
+
+    Returns:
+        DM statistic and p-value.
+    """
+    # Compute forecast errors
+    error1 = actuals - forecast1
+    error2 = actuals - forecast2
+
+    # Choose the loss function
+    if loss_function == 'mse':
+        diff = error1**2 - error2**2
+    elif loss_function == 'mae':
+        diff = np.abs(error1) - np.abs(error2)
+    else:
+        raise ValueError("Unsupported loss function. Use 'mse' or 'mae'.")
+
+    # Compute mean and variance of the loss differential
+    mean_diff = np.mean(diff)
+    n = len(diff)
+    variance_diff = np.var(diff, ddof=1)
+
+    # Correct variance for autocorrelation if h > 1
+    if h > 1:
+        autocov = np.correlate(diff, diff, mode='full') / n
+        variance_diff += 2 * sum(autocov[n-1:n-1+h])
+
+    # Compute DM statistic
+    dm_stat = mean_diff / np.sqrt(variance_diff / n)
+
+    # Compute p-value
+    dof = n - 1  # Degrees of freedom
+    p_value = 2 * (1 - t.cdf(abs(dm_stat), df=dof))  # Two-tailed test
+
+    return dm_stat, p_value
+
+
+def latex_table(models, metrics, p_values=False):
+    """
+    Generates a LaTeX table in wide format comparing models based on given metrics.
+
+    Args:
+    models (list of str): Names of the models (e.g., ['Naive', 'SARIMA', 'SARIMAX', 'LSTM']).
+    metrics (dict): Dictionary with metric names as keys (e.g., 'RMSE', 'MAE') and 
+                    lists of metric values as values. For p-values, use tuples where the second
+                    value is the p-value (e.g., {'RMSE': [123, (101, 0.05), (95, 0.03), (85, 0.01)], ...}).
+
+    Returns:
+    str: A LaTeX table string in wide format.
+    """
+    # Start the table
+    table = "\\begin{tabular}{l" + "c" * len(models) + "}\n\hline\hline \\\\ [-1.8ex]\n"
+
+    # Add the header
+    table += " & " + " & ".join(models) + " \\\\ \n \hline \n"
+
+    # Add rows for each metric
+    for metric, values in metrics.items():
+        # Main metric values row
+        row = f"{metric} & "
+        row_values = []
+        for value in values:
+            if isinstance(value, tuple):  # If it's a tuple, extract the main value
+                main_value, _ = value
+                row_values.append(f"{main_value:.5f}")
+            else:
+                row_values.append(f"{value:.5f}")
+        row += " & ".join(row_values) + " \\\\ \n"
+        table += row
+        if p_values:    
+            # P-values row
+            p_row = "" if metric.strip() == "" else " & "
+            p_values = []
+            for value in values:
+                if isinstance(value, tuple):  # If it's a tuple, extract the p-value
+                    _, p_value = value
+                    p_values.append(f"({p_value:.5f})")
+                else:
+                    p_values.append("-")
+            p_row += " & ".join(p_values) + " \\\\ \n"
+            table += p_row
+
+    # Close the table
+    table += "\hline\hline\n\end{tabular}"
+
+    return table
