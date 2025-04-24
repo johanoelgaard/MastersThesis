@@ -14,5 +14,5 @@ sigma2 = np.sqrt(2.0 / fan_in2)
 W2 = rng.standard_normal((1, 3)) * sigma2
 b2 = np.zeros((1, 1))
 
-print(W1)
-print(W2)
+print(W1) # til gemt lag
+print(W2) # til outputlag
