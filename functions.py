@@ -543,3 +543,67 @@ def latex_table(models, metrics, p_values=False):
     table += "\hline\hline\n\end{tabular}"
 
     return table
+
+def latex_table_grouped(models, metrics, p_values=False):
+    """
+    Generates a LaTeX table in wide format with grouped metrics using multirow and rotatebox.
+
+    Args:
+    models (list of str): Names of the models (e.g., ['Naive', 'SARIMA', 'SARIMAX', 'LSTM']).
+    metrics (dict): Dictionary with keys in the format '*GROUP*Label' and values as lists of metric values.
+                    Values can be either floats or tuples (value, p-value).
+    p_values (bool): Whether to include a second row with p-values.
+
+    Returns:
+    str: A LaTeX table string.
+    """
+    from collections import defaultdict
+
+    # Organize metrics by group
+    grouped = defaultdict(list)
+    for key, values in metrics.items():
+        try:
+            _, group, label = key.split("*")
+        except ValueError:
+            raise ValueError(f"Metric key '{key}' must be in the format '*GROUP*Label'")
+        grouped[group].append((label, values))
+
+    table = "\\begin{tabular}{cl" + "c" * len(models) + "}\n\\hline\\hline \\\\ [-1.8ex]\n"
+    table += " &  & " + " & ".join(models) + " \\\\ \n \\hline \n"
+
+    for group, entries in grouped.items():
+        n_rows = len(entries)
+        for i, (label, values) in enumerate(entries):
+            row = ""
+            if i == 0:
+                row += f"\\multirow[c]{{{n_rows}}}{{*}}{{\\rotatebox{{90}}{{{group}}}}}"
+            else:
+                row += " "
+            row += f"& {label} & "
+            value_strs = []
+            for value in values:
+                if isinstance(value, tuple):
+                    main_value, _ = value
+                    value_strs.append(f"{main_value:.5f}")
+                else:
+                    value_strs.append(f"{value:.5f}")
+            row += " & ".join(value_strs) + " \\\\ \n"
+            table += row
+
+            if p_values:
+                p_row = " &  & "
+                p_strs = []
+                for value in values:
+                    if isinstance(value, tuple):
+                        _, p = value
+                        p_strs.append(f"({p:.5f})")
+                    else:
+                        p_strs.append("-")
+                p_row += " & ".join(p_strs) + " \\\\ \n"
+                table += p_row
+
+        table += "\\hline"
+
+    table += "\\hline\n\\end{tabular}"
+
+    return table
