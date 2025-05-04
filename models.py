@@ -360,7 +360,7 @@ def train_mlp(
 
     if best_state is not None:
         model.load_state_dict(best_state)
-
+    print(f"Best val loss: {best_val_loss:.5E}")
     return model, history
 
 
