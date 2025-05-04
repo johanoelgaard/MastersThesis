@@ -676,7 +676,7 @@ def latex_table_nested(models, metrics, p_values=False):
                     p_row += " & ".join(p_strs) + " \\\\ \n"
                     table += p_row
 
-            cline_range = 2 + len(models)
+            cline_range = 3 + len(models)
             table += f"\\cline{{2-{cline_range}}}\n"
     table += "\\hline\\hline\n\\end{tabular}"
     return table
