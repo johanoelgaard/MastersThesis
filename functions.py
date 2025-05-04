@@ -607,3 +607,74 @@ def latex_table_grouped(models, metrics, p_values=False):
     table += "\\hline\n\\end{tabular}"
 
     return table
+
+
+def latex_table_nested(models, metrics, p_values=False):
+    """
+    Generates a LaTeX table with two vertical groupings: outer group (e.g., noise level)
+    and inner group (e.g., metric type), with label and model values across columns.
+
+    Args:
+    models (list): List of model names.
+    metrics (dict): Keys in the format '*Outer*Inner*Label'. Values can be floats or tuples.
+    p_values (bool): Whether to print p-values below each value.
+
+    Returns:
+    str: LaTeX table string.
+    """
+    from collections import defaultdict
+
+    # Parse and group the metrics
+    nested = defaultdict(lambda: defaultdict(list))
+    for key, values in metrics.items():
+        try:
+            _, outer, inner, label = key.split("*")
+        except ValueError:
+            raise ValueError(f"Metric key '{key}' must be in the format '*Outer*Inner*Label'")
+        nested[outer][inner].append((label, values))
+
+    # Start LaTeX table
+    table = "\\begin{tabular}{ccl" + "c" * len(models) + "}\n\\hline\\hline \\\\ [-1.8ex]\n"
+    table += " &  &  & " + " & ".join(models) + " \\\\ \n\\hline \n"
+
+    for outer_group, inner_groups in nested.items():
+        outer_row_count = sum(len(items) for items in inner_groups.values())
+        outer_started = False
+        for inner_group, rows in inner_groups.items():
+            inner_row_count = len(rows)
+            for i, (label, values) in enumerate(rows):
+                row = ""
+                if not outer_started:
+                    row += f"\\multirow[c]{{{outer_row_count}}}{{*}}{{{outer_group}}}"
+                    outer_started = True
+                else:
+                    row += " "
+                if i == 0:
+                    row += f" & \\multirow[c]{{{inner_row_count}}}{{*}}{{\\rotatebox{{90}}{{{inner_group}}}}}"
+                else:
+                    row += " & "
+                row += f" & {label} & "
+                row_values = []
+                for v in values:
+                    if isinstance(v, tuple):
+                        row_values.append(f"{v[0]:.5f}")
+                    elif isinstance(v, (int, float)):
+                        row_values.append(f"{v:.5f}")
+                    else:
+                        row_values.append("-")
+                row += " & ".join(row_values) + " \\\\ \n"
+                table += row
+
+                if p_values:
+                    p_row = " &  &  & "
+                    p_values_str = []
+                    for v in values:
+                        if isinstance(v, tuple):
+                            p_values_str.append(f"({v[1]:.5f})")
+                        else:
+                            p_values_str.append("-")
+                    p_row += " & ".join(p_values_str) + " \\\\ \n"
+                    table += p_row
+            table += "\\hline\n"
+    table += "\\hline\\end{tabular}"
+    return table
