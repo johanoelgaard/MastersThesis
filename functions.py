@@ -629,7 +629,7 @@ def latex_table_nested(models, metrics, p_values=False):
         try:
             _, outer, inner, label = key.split("*")
         except ValueError:
-            raise ValueError(f"Metric key '{key}' must be in the format '*Outer**Inner*Label'")
+            raise ValueError(f"Metric key '{key}' must be in the format '*Outer*Inner*Label'")
         nested[outer][inner].append((label, values))
 
     col_count = len(models) + 3  # Two grouping columns + label + model columns
@@ -642,6 +642,7 @@ def latex_table_nested(models, metrics, p_values=False):
         outer_started = False
         for j, (inner_group, rows) in enumerate(inner_groups.items()):
             inner_row_count = len(rows)
+            idx = 0
             for i, (label, values) in enumerate(rows):
                 row = ""
                 if not outer_started:
@@ -675,8 +676,11 @@ def latex_table_nested(models, metrics, p_values=False):
                             p_strs.append("-")
                     p_row += " & ".join(p_strs) + " \\\\ \n"
                     table += p_row
-
-            cline_range = 3 + len(models)
-            table += f"\\cline{{2-{cline_range}}}\n"
-    table += "\\hline\\hline\n\\end{tabular}"
+                idx += 1
+                # print(f'{i}: {inner_group}, {inner_row_count-1}, {j}: {outer_group}, {outer_row_count-1}')
+                if i == inner_row_count-1 and j != outer_row_count:          # Not last inner block
+                    table += f"\\cline{{2-{col_count}}}\n"
+                    # print(row)
+        table += "\\hline\n"
+    table += "\\hline\n\\end{tabular}"
     return table
