@@ -596,3 +596,16 @@ def latex_table_nested(models, metrics, p_values=False):
         table += "\\hline\n"
     table += "\\hline\n\\end{tabular}"
     return table
+
+def cumret(series, upper, lower):
+    """
+    Cumulative return from months -upper … -lower (inclusive),
+    skipping the most recent `lower-1` months.
+    """
+    window = upper - lower + 1
+    return (
+        (1 + series)
+        .shift(lower)                    # skip `lower-1` most-recent months
+        .rolling(window, min_periods=window)
+        .apply(np.prod, raw=True) - 1
+    )
