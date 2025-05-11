@@ -37,6 +37,7 @@ class MLPModel(nn.Module):
                            If int, all hidden layers have this many units.
                            If list, its length must == depth, and each entry
                            defines the size of that hidden layer.
+        dropout (float):   Dropout probability (default: 0.0).
         output_dim (int):  Number of outputs (default: 1).
         activation (nn.Module class):
                            Activation to use after each hidden layer
@@ -100,6 +101,7 @@ def train_mlp(
     batch_size: int | None = None,
     shuffle_train: bool = True,
     shuffle_val: bool = False,
+    save_path: str = None,
 ):
     """
     Train a PyTorch MLP model with L1/L2 regularization and early stopping.
@@ -122,6 +124,7 @@ def train_mlp(
         batch_size    (int|None):           If None, uses full dataset.
         shuffle_train (bool):               Shuffle train loader.
         shuffle_val   (bool):               Shuffle val loader.
+        save_path     (str|None):          If given, saves the model to this path.
 
     Returns:
         best_model (nn.Module):  Model re-loaded with best weights.
@@ -201,6 +204,12 @@ def train_mlp(
     if best_state is not None:
         model.load_state_dict(best_state)
     print(f"Best val loss: {best_val_loss:.5E}")
+
+    # save the model
+    if save_path is not None:
+        torch.save(model.state_dict(), save_path)
+        print(f"Model saved to {save_path}")
+
     return model, history
 
 
