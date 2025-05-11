@@ -197,8 +197,7 @@ def train_mlp(
         else:
             counter += 1
             if counter >= patience:
-                print(f"Early stopping at epoch {epoch}. "
-                      f"Best val loss: {best_val_loss:.5E}")
+                print(f"Early stopping at epoch {epoch}")
                 break
 
     if best_state is not None:
