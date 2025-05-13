@@ -2,9 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
-# import pandas as pd
-# import matplotlib.pyplot as plt
-# import matplotlib.dates as mdates
 from scipy.stats import t
 import numpy as np
 

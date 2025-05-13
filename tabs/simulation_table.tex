@@ -1,0 +1,24 @@
+\begin{tabular}{cclcccc}
+\hline\hline \\ [-1.8ex]
+ &  &  & OLS & LASSO & MLP & MLP w. $\ell_1$ \\ 
+\hline 
+\multirow[c]{6}{*}{\rotatebox{90}{Baseline}} & \multirow[c]{3}{*}{\rotatebox{90}{RMSE}} & Gaussian error & 0.00940 & 0.00940 & 0.01071 & - \\ 
+  &  & Non-Gaussian error & 0.04152 & 0.04158 & 0.04238 & - \\ 
+  &  & Non-linear & 0.02250 & 0.02250 & 0.01371 & - \\ 
+\cline{2-7}
+  & \multirow[c]{3}{*}{\rotatebox{90}{MAE}} & Gaussian error & 0.00727 & 0.00727 & 0.00811 & - \\ 
+  &  & Non-Gaussian error & 0.02597 & 0.02599 & 0.02802 & - \\ 
+  &  & Non-linear & 0.01830 & 0.01830 & 0.01149 & - \\ 
+\cline{2-7}
+\hline
+\multirow[c]{6}{*}{\rotatebox{90}{Noise}} & \multirow[c]{3}{*}{\rotatebox{90}{RMSE}} & Gaussian error & 0.01133 & 0.01056 & 0.01573 & 0.01314 \\ 
+  &  & Non-Gaussian error & 0.05132 & 0.04401 & 0.07869 & 0.05033 \\ 
+  &  & Non-linear & 0.03237 & 0.02306 & 0.02415 & 0.01431 \\ 
+\cline{2-7}
+  & \multirow[c]{3}{*}{\rotatebox{90}{MAE}} & Gaussian error & 0.00879 & 0.00819 & 0.01186 & 0.00913 \\ 
+  &  & Non-Gaussian error & 0.03714 & 0.02808 & 0.06377 & 0.03618 \\ 
+  &  & Non-linear & 0.02732 & 0.01674 & 0.01746 & 0.01200 \\ 
+\cline{2-7}
+\hline
+\hline
+\end{tabular}

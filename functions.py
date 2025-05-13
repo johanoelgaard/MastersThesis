@@ -6,6 +6,7 @@ from numpy import linalg as la
 from tabulate import tabulate
 from scipy import stats
 from scipy.stats import chi2
+import math
 
 def first_valid(row, columns):
     """
@@ -609,3 +610,8 @@ def cumret(series, upper, lower):
         .rolling(window, min_periods=window)
         .apply(np.prod, raw=True) - 1
     )
+
+def student_t_pdf(x, nu, mu, sigma):
+    num = math.gamma((nu + 1) / 2)
+    den = math.sqrt(nu * math.pi) * math.gamma(nu / 2) * sigma
+    return num / den * (1 + ((x - mu) / sigma) ** 2 / nu) ** (-(nu + 1) / 2)
