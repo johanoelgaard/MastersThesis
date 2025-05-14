@@ -4,6 +4,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 from scipy.stats import t
 import numpy as np
+import torch.nn.init as init
 
 class MLPdataset(Dataset):
     """
@@ -72,7 +73,8 @@ class MLPModel(nn.Module):
         
         # bundle into a Sequential
         self.network = nn.Sequential(*layers)
-    
+
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.network(x)
 
