@@ -21,26 +21,27 @@ for i, (a, b, c, t) in enumerate(zip(x1, x2, x3, y), start=1):
 
 
 #### Kaiming init draw ####
+alpha  = 0.1                        # Leaky‐ReLU negative slope
+fan_in = 3                          # each hidden neuron sees 3 inputs
 
-fan_in = 3
-sigma  = (2.0 / fan_in) ** 0.5           # √(2/3)
+# ─── Hidden‐layer (Leaky ReLU) init ───────────────────────────────
+# variance = 2 / ((1+alpha^2) * fan_in)
+sigma_hidden = np.sqrt(2.0 / ((1 + alpha**2) * fan_in))
 
-# ----- hidden-layer weights: three row-vectors ----------------------
-w1 = rng.standard_normal(3) * sigma      #  w_11, w_12, w_13
-w2 = rng.standard_normal(3) * sigma      #  w_21, w_22, w_23
-w3 = rng.standard_normal(3) * sigma      #  w_31, w_32, w_33
+w1 = rng.standard_normal(3) * sigma_hidden  # weights for hidden neuron 1
+w2 = rng.standard_normal(3) * sigma_hidden  # weights for hidden neuron 2
+w3 = rng.standard_normal(3) * sigma_hidden  # weights for hidden neuron 3
 
-# ----- output-layer weights ----------------------------------------
-beta = rng.standard_normal(3) * sigma    # β1, β2, β3
+# ─── Output‐layer (identity) init ─────────────────────────────────
+# Glorot normal: variance = 1 / fan_in
+sigma_beta = np.sqrt(1.0 / fan_in)
 
-# optional: biases (kept zero)
-b_hidden = np.zeros(3)
-b_out    = 0.0
+beta = rng.standard_normal(3) * sigma_beta  # output weight vector
 
-# pretty-print
-print("Hidden-layer weight vectors (row notation):")
+# ─── Pretty‐print ─────────────────────────────────────────────────
+print("Hidden‐layer weight vectors (w1, w2, w3):")
 for m, w in enumerate((w1, w2, w3), start=1):
-    print(f"w{m} =", w)
+    print(f"  w{m} =", w)
 
-print("\nOutput weight vector:")
-print("beta =", beta)
+print("\nOutput weight vector β:")
+print("  beta =", beta)
