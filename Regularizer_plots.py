@@ -17,7 +17,7 @@ theta1 = np.linspace(-2, 5, 400)
 theta2 = np.linspace(-2, 5, 400)
 T1, T2 = np.meshgrid(theta1, theta2)
 
-opt1, opt2 = 2.0, 1.0
+opt1, opt2 = 2.5, 1.5
 J = ((T1 - opt1) / 2)**2 + (T2 - opt2)**2
 
 gamma = 0.5
