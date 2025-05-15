@@ -6,6 +6,7 @@ from numpy import linalg as la
 from tabulate import tabulate
 from scipy import stats
 from scipy.stats import chi2
+import math
 
 def first_valid(row, columns):
     """
@@ -272,94 +273,6 @@ def perm( Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
 
     return Z
 
-# def export_to_latex(
-#     results_list: list,
-#     col_headers: list,
-#     var_names_list: list,
-#     filename: str = None,
-#     label_x: list = None,
-#     **kwargs
-# ) -> None:
-#     """
-#     Exports regression results to a LaTeX table and saves it as a .txt file.
-
-#     Args:
-#         results_list (list): List of result dictionaries from the estimate function.
-#         col_headers (list): List of column headers (e.g., ['OLS', 'FE', 'FD']).
-#         var_names_list (list): List of lists of variable names for each result.
-#         filename (str): The filename to save the LaTeX table (should end with .txt).
-#         label_x (list, optional): List of variable names to include in the table in desired order.
-#     """
-#     num_models = len(results_list)
-
-#     # Generate the list of all variables to include in the table
-#     if label_x is None:
-#         label_x = var_names_list[0]  # default to variables from the first model
-
-#     # Start constructing the LaTeX table
-#     lines = []
-
-#     lines.append("\\begin{tabular}{" + "l" + "c" * num_models + "}")
-#     lines.append("\\hline\\hline\\\\[-1.8ex]")
-#     header_row = [""] + col_headers
-#     lines.append(" & ".join(header_row) + " \\\\")
-#     lines.append("\\hline")
-
-#     # For each variable in label_x
-#     for var_name in label_x:
-#         estimate_row = [var_name]
-#         se_row = ['']
-#         for result, var_names in zip(results_list, var_names_list):
-#             if var_name in var_names:
-#                 idx = var_names.index(var_name)
-#                 b_hat = result.get('b_hat')[idx][0]
-#                 se = result.get('se')[idx][0]
-#                 wald = result.get('wald')[idx][0]
-
-#                 # Calculate p-value from wald
-#                 p_value = 1 - chi2.cdf(wald, result.get('b_hat')[idx].shape[0])
-
-#                 # Determine the number of stars based on p-value
-#                 if p_value < 0.01:
-#                     stars = '***'
-#                 elif p_value < 0.05:
-#                     stars = '**'
-#                 elif p_value < 0.10:
-#                     stars = '*'
-#                 else:
-#                     stars = ''
-
-#                 # Append coefficient with stars
-#                 estimate_row.append(f"{b_hat:.4f}{stars}")
-#                 # Append standard error in parentheses
-#                 se_row.append(f"({se:.4f})")
-#             else:
-#                 # Variable not in this model
-#                 estimate_row.append("")
-#                 se_row.append("")
-
-#         # Write estimate row
-#         lines.append(" & ".join(estimate_row) + " \\\\[-1ex]")
-#         # Write standard error row
-#         lines.append(" & \\footnotesize".join(se_row) + " \\\\")
-
-#     # Additional statistics
-#     lines.append("\\hline")
-#     statistics = ["R-squared"] + [f"{result.get('R2').item():.3f}" for result in results_list]
-#     lines.append(" & ".join(statistics) + " \\\\")
-#     lines.append("\\hline\\hline")
-
-#     # End of table
-#     lines.append("\\end{tabular}")
-
-#     # Save to file if filename is provided else return the table as a string
-#     if filename:
-#         with open(filename, 'w') as f:
-#             f.write("\n".join(lines))
-#         print(f"LaTeX table saved to {filename}")
-#     else:
-#         return "\n".join(lines)
-
 # Create function to check rank of demeaned matrix, and return its eigenvalues.
 def check_rank(x):
     print(f'Rank of demeaned x: {la.matrix_rank(x)}')
@@ -543,3 +456,162 @@ def latex_table(models, metrics, p_values=False):
     table += "\hline\hline\n\end{tabular}"
 
     return table
+
+def latex_table_grouped(models, metrics, p_values=False):
+    """
+    Generates a LaTeX table in wide format with grouped metrics using multirow and rotatebox.
+
+    Args:
+    models (list of str): Names of the models (e.g., ['Naive', 'SARIMA', 'SARIMAX', 'LSTM']).
+    metrics (dict): Dictionary with keys in the format '*GROUP*Label' and values as lists of metric values.
+                    Values can be either floats or tuples (value, p-value).
+    p_values (bool): Whether to include a second row with p-values.
+
+    Returns:
+    str: A LaTeX table string.
+    """
+    from collections import defaultdict
+
+    # Organize metrics by group
+    grouped = defaultdict(list)
+    for key, values in metrics.items():
+        try:
+            _, group, label = key.split("*")
+        except ValueError:
+            raise ValueError(f"Metric key '{key}' must be in the format '*GROUP*Label'")
+        grouped[group].append((label, values))
+
+    table = "\\begin{tabular}{cl" + "c" * len(models) + "}\n\\hline\\hline \\\\ [-1.8ex]\n"
+    table += " &  & " + " & ".join(models) + " \\\\ \n \\hline \n"
+
+    for group, entries in grouped.items():
+        n_rows = len(entries)
+        for i, (label, values) in enumerate(entries):
+            row = ""
+            if i == 0:
+                row += f"\\multirow[c]{{{n_rows}}}{{*}}{{\\rotatebox{{90}}{{{group}}}}}"
+            else:
+                row += " "
+            row += f"& {label} & "
+            value_strs = []
+            for value in values:
+                if isinstance(value, tuple):
+                    main_value, _ = value
+                    value_strs.append(f"{main_value:.5f}")
+                else:
+                    value_strs.append(f"{value:.5f}")
+            row += " & ".join(value_strs) + " \\\\ \n"
+            table += row
+
+            if p_values:
+                p_row = " &  & "
+                p_strs = []
+                for value in values:
+                    if isinstance(value, tuple):
+                        _, p = value
+                        p_strs.append(f"({p:.5f})")
+                    else:
+                        p_strs.append("-")
+                p_row += " & ".join(p_strs) + " \\\\ \n"
+                table += p_row
+
+        table += "\\hline"
+
+    table += "\\hline\n\\end{tabular}"
+
+    return table
+
+
+def latex_table_nested(models, metrics, p_values=False):
+    """
+    Generates a LaTeX table with two vertical groupings (rotated), using \multirow, \rotatebox, and \cline.
+
+    Args:
+    models (list): List of model names.
+    metrics (dict): Keys must be '*Outer**Inner*Label'. Values are lists of values or tuples.
+    p_values (bool): Whether to add p-value rows under the estimates.
+
+    Returns:
+    str: LaTeX table as a string.
+    """
+    from collections import defaultdict
+
+    # Organize metrics into nested structure: {Outer: {Inner: [(Label, Values), ...]}}
+    nested = defaultdict(lambda: defaultdict(list))
+    for key, values in metrics.items():
+        try:
+            _, outer, inner, label = key.split("*")
+        except ValueError:
+            raise ValueError(f"Metric key '{key}' must be in the format '*Outer*Inner*Label'")
+        nested[outer][inner].append((label, values))
+
+    col_count = len(models) + 3  # Two grouping columns + label + model columns
+
+    table = f"\\begin{{tabular}}{{ccl{'c' * len(models)}}}\n\\hline\\hline \\\\ [-1.8ex]\n"
+    table += " &  &  & " + " & ".join(models) + " \\\\ \n\\hline \n"
+
+    for outer_group, inner_groups in nested.items():
+        outer_row_count = sum(len(items) for items in inner_groups.values())
+        outer_started = False
+        for j, (inner_group, rows) in enumerate(inner_groups.items()):
+            inner_row_count = len(rows)
+            idx = 0
+            for i, (label, values) in enumerate(rows):
+                row = ""
+                if not outer_started:
+                    row += f"\\multirow[c]{{{outer_row_count}}}{{*}}{{\\rotatebox{{90}}{{{outer_group}}}}}"
+                    outer_started = True
+                else:
+                    row += " "
+                if i == 0:
+                    row += f" & \\multirow[c]{{{inner_row_count}}}{{*}}{{\\rotatebox{{90}}{{{inner_group}}}}}"
+                else:
+                    row += " & "
+                row += f" & {label} & "
+                formatted_vals = []
+                for val in values:
+                    if isinstance(val, tuple):
+                        formatted_vals.append(f"{val[0]:.5f}")
+                    elif isinstance(val, (int, float)):
+                        formatted_vals.append(f"{val:.5f}")
+                    else:
+                        formatted_vals.append("-")
+                row += " & ".join(formatted_vals) + " \\\\ \n"
+                table += row
+
+                if p_values:
+                    p_row = " &  &  & "
+                    p_strs = []
+                    for val in values:
+                        if isinstance(val, tuple):
+                            p_strs.append(f"({val[1]:.5f})")
+                        else:
+                            p_strs.append("-")
+                    p_row += " & ".join(p_strs) + " \\\\ \n"
+                    table += p_row
+                idx += 1
+                # print(f'{i}: {inner_group}, {inner_row_count-1}, {j}: {outer_group}, {outer_row_count-1}')
+                if i == inner_row_count-1 and j != outer_row_count:          # Not last inner block
+                    table += f"\\cline{{2-{col_count}}}\n"
+                    # print(row)
+        table += "\\hline\n"
+    table += "\\hline\n\\end{tabular}"
+    return table
+
+def cumret(series, upper, lower):
+    """
+    Cumulative return from months -upper … -lower (inclusive),
+    skipping the most recent `lower-1` months.
+    """
+    window = upper - lower + 1
+    return (
+        (1 + series)
+        .shift(lower)                    # skip `lower-1` most-recent months
+        .rolling(window, min_periods=window)
+        .apply(np.prod, raw=True) - 1
+    )
+
+def student_t_pdf(x, nu, mu, sigma):
+    num = math.gamma((nu + 1) / 2)
+    den = math.sqrt(nu * math.pi) * math.gamma(nu / 2) * sigma
+    return num / den * (1 + ((x - mu) / sigma) ** 2 / nu) ** (-(nu + 1) / 2)
