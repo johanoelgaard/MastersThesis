@@ -210,8 +210,6 @@ def train_mlp(
 
     return model, history
 
-
-
 def predict_mlp(
     model: torch.nn.Module,
     x_test: np.ndarray,
