@@ -20,8 +20,8 @@ T1, T2 = np.meshgrid(theta1, theta2)
 opt1, opt2 = 2.0, 1.0
 J = ((T1 - opt1) / 2)**2 + (T2 - opt2)**2
 
-alpha = 0.5
-penalty_en = alpha * (np.abs(T1) + np.abs(T2)) + (1 - alpha) * (T1**2 + T2**2)
+gamma = 0.5
+penalty_en = gamma * (np.abs(T1) + np.abs(T2)) + (1 - gamma) * (T1**2 + T2**2)
 
 # --- 3) Plotting ---
 fig, axes = plt.subplots(1, 3)
@@ -56,7 +56,7 @@ axes[2].contour(T1, T2, J, levels=np.linspace(0.1, 4, 8))   # no clabel here eit
 ce = axes[2].contour(T1, T2, penalty_en, levels=[1], colors='r', linewidths=2)
 axes[2].clabel(ce, fmt={1: 'α·∥θ∥₁+(1-α)·∥θ∥₂²=1'}, fontsize=12)  # only label the EN curve
 axes[2].scatter(opt1, opt2, color='blue', marker='x', s=100, label='Optimum')
-axes[2].set_title(r"Elastic Net ($\alpha=0.5$)")
+axes[2].set_title(r"Elastic Net ($\gamma=0.5$)")
 axes[2].set_xlabel(r"$\theta_1$")
 axes[2].set_ylabel(r"$\theta_2$")
 axes[2].legend()
