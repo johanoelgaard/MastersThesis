@@ -615,3 +615,12 @@ def student_t_pdf(x, nu, mu, sigma):
     num = math.gamma((nu + 1) / 2)
     den = math.sqrt(nu * math.pi) * math.gamma(nu / 2) * sigma
     return num / den * (1 + ((x - mu) / sigma) ** 2 / nu) ** (-(nu + 1) / 2)
+
+def replace_scientific(m):
+    mant   = m.group(1)
+    exp_int = int(m.group(2))        # turns "+00" or "00" into 0
+    if exp_int == 0:
+        # no 10^0 factor → just the number itself
+        return f"${mant}$"
+    # otherwise emit the ×10^n
+    return f"${mant} \\cdot 10^{{{exp_int}}}$"
