@@ -63,8 +63,6 @@ axes[2].legend()
 axes[2].axhline(0, linewidth=0.5)
 axes[2].axvline(0, linewidth=0.5)
 
-plt.tight_layout()
-
 # ensure the directory exists and save
 os.makedirs("figs", exist_ok=True)
 plt.savefig("figs/contours.png", dpi=300, bbox_inches="tight")
