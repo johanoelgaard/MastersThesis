@@ -160,14 +160,23 @@ def train_mlp(
             optimizer.zero_grad()
             out = model(X)
             loss = criterion(out, y)
-            loss += l1_regularization(model, lambda_l1) / X.size(0)
-            loss += l2_regularization(model, lambda_l2) / X.size(0)
+            # loss += l1_regularization(model, lambda_l1) / X.size(0)
+            # loss += l2_regularization(model, lambda_l2) / X.size(0)
             loss.backward()
             optimizer.step()
 
+            lr = optimizer.param_groups[0]['lr']
+            with torch.no_grad():
+                for p in model.parameters():
+                    if not p.requires_grad:
+                        continue
+                    # soft-threshold: sign(p) * max(|p| - lr*λ₁, 0)
+                    p.data = torch.sign(p.data) * \
+                            torch.clamp(p.data.abs() - lr * lambda_l1, min=0.0)
+
             train_loss += loss.item() * X.size(0)
 
-        train_loss /= len(train_loader.dataset)
+        # train_loss /= len(train_loader.dataset)
 
         # ----- validation -----
         model.eval()
