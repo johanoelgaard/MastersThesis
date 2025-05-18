@@ -361,50 +361,50 @@ def serial_corr(y, x, T):
     return estimate(e, e_l,T=T-1,robust=True)
 
 
-def diebold_mariano_test(actuals, forecast1, forecast2, loss_function='mse', h=1):
-    """
-    Performs the Diebold-Mariano test for predictive accuracy.
+# def diebold_mariano_test(actuals, forecast1, forecast2, loss_function='mse', h=1):
+#     """
+#     Performs the Diebold-Mariano test for predictive accuracy.
 
-    Args:
-        actuals (array): Actual observed values.
-        forecast1 (array): First forecast to compare.
-        forecast2 (array): Second forecast to compare.
-        loss_function (str): The loss function to use ('mse' or 'mae').
-        h (int): Forecast horizon, default is 1 (single-step forecast).
+#     Args:
+#         actuals (array): Actual observed values.
+#         forecast1 (array): First forecast to compare.
+#         forecast2 (array): Second forecast to compare.
+#         loss_function (str): The loss function to use ('mse' or 'mae').
+#         h (int): Forecast horizon, default is 1 (single-step forecast).
 
-    Returns:
-        DM statistic and p-value.
-    """
-    # Compute forecast errors
-    error1 = actuals - forecast1
-    error2 = actuals - forecast2
+#     Returns:
+#         DM statistic and p-value.
+#     """
+#     # Compute forecast errors
+#     error1 = actuals - forecast1
+#     error2 = actuals - forecast2
 
-    # Choose the loss function
-    if loss_function == 'mse':
-        diff = error1**2 - error2**2
-    elif loss_function == 'mae':
-        diff = np.abs(error1) - np.abs(error2)
-    else:
-        raise ValueError("Unsupported loss function. Use 'mse' or 'mae'.")
+#     # Choose the loss function
+#     if loss_function == 'mse':
+#         diff = error1**2 - error2**2
+#     elif loss_function == 'mae':
+#         diff = np.abs(error1) - np.abs(error2)
+#     else:
+#         raise ValueError("Unsupported loss function. Use 'mse' or 'mae'.")
 
-    # Compute mean and variance of the loss differential
-    mean_diff = np.mean(diff)
-    n = len(diff)
-    variance_diff = np.var(diff, ddof=1)
+#     # Compute mean and variance of the loss differential
+#     mean_diff = np.mean(diff)
+#     n = len(diff)
+#     variance_diff = np.var(diff, ddof=1)
 
-    # Correct variance for autocorrelation if h > 1
-    if h > 1:
-        autocov = np.correlate(diff, diff, mode='full') / n
-        variance_diff += 2 * sum(autocov[n-1:n-1+h])
+#     # Correct variance for autocorrelation if h > 1
+#     if h > 1:
+#         autocov = np.correlate(diff, diff, mode='full') / n
+#         variance_diff += 2 * sum(autocov[n-1:n-1+h])
 
-    # Compute DM statistic
-    dm_stat = mean_diff / np.sqrt(variance_diff / n)
+#     # Compute DM statistic
+#     dm_stat = mean_diff / np.sqrt(variance_diff / n)
 
-    # Compute p-value
-    dof = n - 1  # Degrees of freedom
-    p_value = 2 * (1 - t.cdf(abs(dm_stat), df=dof))  # Two-tailed test
+#     # Compute p-value
+#     dof = n - 1  # Degrees of freedom
+#     p_value = 2 * (1 - t.cdf(abs(dm_stat), df=dof))  # Two-tailed test
 
-    return dm_stat, p_value
+#     return dm_stat, p_value
 
 
 def latex_table(models, metrics, p_values=False):
@@ -624,3 +624,126 @@ def replace_scientific(m):
         return f"${mant}$"
     # otherwise emit the ×10^n
     return f"${mant} \\cdot 10^{{{exp_int}}}$"
+
+def qlike_fun(yhat, y):
+    """
+    Computes the QLIKE error
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+
+    Returns:
+        float: QLIKE error value.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)
+    return np.mean(np.log(yhat) - (y / yhat))
+
+def mae_fun(yhat, y):
+    """
+    Computes the Mean Absolute Error (MAE)
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+
+    Returns:
+        float: MAE value.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)    
+    return np.mean(np.abs(y - yhat))
+
+def smape_fun(yhat, y):
+    """
+    Computes the Symmetric Mean Absolute Percentage Error (sMAPE)
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+
+    Returns:
+        float: sMAPE value.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)    
+    return np.mean(np.abs(y - yhat) / (np.abs(y) + np.abs(yhat))) * 100
+
+def mape_fun(yhat, y):
+    """
+    Computes the Mean Absolute Percentage Error (MAPE)
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+
+    Returns:
+        float: MAPE value.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)    
+    return np.mean(np.abs((y - yhat) / y)) * 100
+
+def mse_fun(yhat, y):
+    """
+    Computes the Mean Squared Error (MSE)
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+
+    Returns:
+        float: MSE value.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)    
+    return np.mean((y - yhat) ** 2)
+
+def rmse_fun(yhat, y):
+    """
+    Computes the Root Mean Squared Error (RMSE)
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+
+    Returns:
+        float: RMSE value.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)    
+    return np.sqrt(np.mean((y - yhat) ** 2))
+
+def mse_blend_fun(yhat, y, alpha=0.5):
+    """
+    Computes the blend of sign error and Mean Squared Error (MSE)
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+        alpha (float): Weighting factor for the sign error. Defaults to 0.5.
+
+    Returns:
+        float: blended error
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)
+
+    # Compute the MSE
+    mse_value = np.mean((y - yhat) ** 2)
+
+    # Compute the sign error
+    # evaluate percentage of wrong sign
+    sign_error = np.mean(np.sign(yhat) != np.sign(y))
+
+    # Compute the blended error
+    blended_error = alpha * mse_value + (1 - alpha) * sign_error    
+    return blended_error
