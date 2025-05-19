@@ -721,6 +721,24 @@ def rmse_fun(yhat, y):
     y = np.array(y)    
     return np.sqrt(np.mean((y - yhat) ** 2))
 
+def huber_fun(yhat, y, delta=1.0):
+    """
+    Computes the Huber loss
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+        delta (float): Threshold for Huber loss. Defaults to 1.0.
+
+    Returns:
+        float: Huber loss value.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)    
+    diff = np.abs(y - yhat)
+    return np.mean(np.where(diff <= delta, 0.5 * diff ** 2, delta * (diff - 0.5 * delta)))
+
 def mse_blend_fun(yhat, y, alpha=0.5):
     """
     Computes the blend of sign error and Mean Squared Error (MSE)
