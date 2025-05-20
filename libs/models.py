@@ -165,15 +165,6 @@ def train_mlp(
             loss.backward()
             optimizer.step()
 
-            # lr = optimizer.param_groups[0]['lr']
-            # with torch.no_grad():
-            #     for p in model.parameters():
-            #         if not p.requires_grad:
-            #             continue
-            #         # soft-threshold: sign(p) * max(|p| - lr*λ₁, 0)
-            #         p.data = torch.sign(p.data) * \
-            #                 torch.clamp(p.data.abs() - lr * lambda_l1, min=0.0)
-
             train_loss += loss.item() * X.size(0)
 
         train_loss /= len(train_loader.dataset)
