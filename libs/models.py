@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader, Dataset
 from scipy.stats import t
 import numpy as np
 import torch.nn.init as init
+import copy
 
 class MLPdataset(Dataset):
     """
@@ -191,7 +192,8 @@ def train_mlp(
         # early stopping
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            best_state = model.state_dict()
+            best_state = {k: v.detach().cpu().clone()
+                for k, v in model.state_dict().items()}
             counter = 0
         else:
             counter += 1

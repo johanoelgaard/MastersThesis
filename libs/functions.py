@@ -759,7 +759,7 @@ def madl_fun(yhat, y):
 
     return madl
 
-def amadl_fun(yhat, y):
+def amadl_fun(yhat, y, delta=0.5):
     """
     Computes the Augmented Mean Absolute Directional Loss (AMADL)
 
@@ -775,8 +775,36 @@ def amadl_fun(yhat, y):
     y = np.array(y)
 
     # Compute the AMADL
-    amadl = np.mean(-1 
+    amadl = np.mean((delta-1) 
                     * np.sign(yhat * y) 
                     * np.abs(y) 
-                    * (1/(1+(np.abs(yhat-y)/(1+np.abs(yhat-y)))*np.sign(yhat * y))))
+                    + delta * (y - yhat) ** 2)
     return amadl
+
+def madl_elementwise(yhat, y):
+    """
+    Computes the Mean Absolute Directional Loss (MADL) element-wise.
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+    Returns:
+        np.ndarray: MADL values for each element.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)
+    return -1 * np.sign(yhat * y) * np.abs(y) 
+
+def amadl_elementwise(yhat, y, delta=0.5):
+    """
+    Computes the Augmented Mean Absolute Directional Loss (AMADL) element-wise.
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+    Returns:
+        np.ndarray: AMADL values for each element.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)
+    return (delta-1) * np.sign(yhat * y) * np.abs(y) + delta * (y-yhat)**2
