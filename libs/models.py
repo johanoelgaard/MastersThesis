@@ -201,7 +201,7 @@ def train_mlp(
 
     if best_state is not None:
         model.load_state_dict(best_state)
-    print(f"Best val loss: {best_val_loss:.5E}")
+        print(f"Best val loss: {best_val_loss:.5E}")
 
     # save the model
     if save_path is not None:
@@ -251,5 +251,4 @@ def predict_mlp(
     if scaler is not None:
         # expects shape (n_samples, 1)
         preds_arr = scaler.inverse_transform(preds_arr.reshape(-1, 1)).flatten()
-
     return preds_arr

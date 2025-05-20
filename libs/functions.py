@@ -739,29 +739,44 @@ def huber_fun(yhat, y, delta=1.0):
     diff = np.abs(y - yhat)
     return np.mean(np.where(diff <= delta, 0.5 * diff ** 2, delta * (diff - 0.5 * delta)))
 
-def mse_blend_fun(yhat, y, alpha=0.5):
+def madl_fun(yhat, y):
     """
-    Computes the blend of sign error and Mean Squared Error (MSE)
+    Computes the Mean Absolute Directional Loss (MADL)
 
     Args:
         yhat (np.ndarray): Forecasted values.
         y (np.ndarray): Actual values.
-        alpha (float): Weighting factor for the sign error. Defaults to 0.5.
 
     Returns:
-        float: blended error
+        float: MADL value.
     """
     # Ensure yhat and y are numpy arrays
     yhat = np.array(yhat)
     y = np.array(y)
 
-    # Compute the MSE
-    mse_value = np.mean((y - yhat) ** 2)
+    # Compute the MADL
+    madl = np.mean(-1 * np.sign(yhat * y) * np.abs(y))
 
-    # Compute the sign error
-    # evaluate percentage of wrong sign
-    sign_error = np.mean(np.sign(yhat) != np.sign(y))
+    return madl
 
-    # Compute the blended error
-    blended_error = alpha * mse_value + (1 - alpha) * sign_error    
-    return blended_error
+def amadl_fun(yhat, y):
+    """
+    Computes the Augmented Mean Absolute Directional Loss (AMADL)
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+
+    Returns:
+        float: AMADL value.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)
+
+    # Compute the AMADL
+    amadl = np.mean(-1 
+                    * np.sign(yhat * y) 
+                    * np.abs(y) 
+                    * (1/(1+(np.abs(yhat-y)/(1+np.abs(yhat-y)))*np.sign(yhat * y))))
+    return amadl
