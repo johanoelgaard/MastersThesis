@@ -254,3 +254,4 @@ def predict_mlp(
         # expects shape (n_samples, 1)
         preds_arr = scaler.inverse_transform(preds_arr.reshape(-1, 1)).flatten()
     return preds_arr
+
