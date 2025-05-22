@@ -161,8 +161,8 @@ def train_mlp(
             optimizer.zero_grad()
             out = model(X)
             loss = criterion(out, y)
-            loss += l1_regularization(model, lambda_l1) / X.size(0)
-            loss += l2_regularization(model, lambda_l2) / X.size(0)
+            loss += l1_regularization(model, lambda_l1)
+            loss += l2_regularization(model, lambda_l2)
             loss.backward()
             optimizer.step()
 

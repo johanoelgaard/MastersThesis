@@ -7,6 +7,8 @@ from tabulate import tabulate
 from scipy import stats
 from scipy.stats import chi2
 import math
+import ast
+
 
 def first_valid(row, columns):
     """
@@ -809,55 +811,49 @@ def amadl_elementwise(yhat, y, delta=0.5):
     y = np.array(y)
     return (delta-1) * np.sign(yhat * y) * np.abs(y) + delta * (y-yhat)**2
 
-import re
-import pandas as pd
-
 def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
     """
-    Turn a history_size dict into a “long” pandas DataFrame.
+    Turn a history_size dict into a “long” pandas DataFrame,
+    handling both single‐width and pyramid (multi‐width) models.
     
-    Parameters
-    ----------
-    history_dict : dict
-        Keys are names like 'l1{l1}_l2{l2}_drop{drop}_lr{lr}_w{w}_d{d}_run{run}',
-        values are dicts with 'train_loss' and 'val_loss' lists.
-    save_csv : str, optional
-        If given, the DataFrame is also written to this CSV path.
-        
-    Returns
-    -------
-    df : pd.DataFrame
-        Columns: l1, l2, dropout, lr, width, depth, run, epoch, train_loss, val_loss
+    Any key matching:
+        l1{l1}_l2{l2}_drop{drop}_lr{lr}_w{w_spec}[_d{d}]_run{run}
+    where w_spec is either:
+       - digits only, e.g. "32"
+       - a Python‐list literal, e.g. "[32, 16, 8, 4]"
     """
-    # 1) compile regex once
     pattern = re.compile(
-        r'l1(?P<l1>[\d\.e\-]+)'
-        r'_l2(?P<l2>[\d\.e\-]+)'
-        r'_drop(?P<drop>[\d\.e\-]+)'
-        r'_lr(?P<lr>[\d\.e\-]+)'
-        r'_w(?P<w>\d+)'
-        r'_d(?P<d>\d+)'
-        r'_run(?P<run>\d+)'
+        r'^l1(?P<l1>[\d\.e\-]+)'
+      + r'_l2(?P<l2>[\d\.e\-]+)'
+      + r'_drop(?P<drop>[\d\.e\-]+)'
+      + r'_lr(?P<lr>[\d\.e\-]+)'
+      + r'_w(?P<w>\[?[\d,\s]+\]?)'       # captures either "32" or "[32, 16, 8, 4]"
+      + r'(?:_d(?P<d>\d+))?'            # optional depth tag
+      + r'_run(?P<run>\d+)$'
     )
-    
+
     records = []
     for name, hist in history_dict.items():
         m = pattern.match(name)
         if not m:
-            # skip any keys that don’t follow the naming convention
-            continue
-        params = m.groupdict()
-        
-        # cast to the right types
-        l1   = float(params['l1'])
-        l2   = float(params['l2'])
-        drop = float(params['drop'])
-        lr   = float(params['lr'])
-        w    = int(params['w'])
-        d    = int(params['d'])
-        run  = int(params['run'])
-        
-        # for each epoch this run actually executed:
+            continue  # skip non‐matching keys
+
+        p = m.groupdict()
+        l1   = float(p['l1'])
+        l2   = float(p['l2'])
+        drop = float(p['drop'])
+        lr   = float(p['lr'])
+        run  = int(p['run'])
+
+        # parse widths: if it looks like "[...]" eval it, else wrap as single‐item list
+        w_spec = p['w']
+        if w_spec.startswith('['):
+            widths = ast.literal_eval(w_spec)      # e.g. [32,16,8,4]
+        else:
+            widths = [int(w_spec)]                 # e.g. [32]
+
+        depth = len(widths)
+
         for epoch, (t_loss, v_loss) in enumerate(
                 zip(hist['train_loss'], hist['val_loss']), start=1):
             records.append({
@@ -865,17 +861,17 @@ def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
                 'l2':         l2,
                 'dropout':    drop,
                 'lr':         lr,
-                'width':      w,
-                'depth':      d,
+                'widths':     widths,
+                'widths_str': w_spec,
+                'depth':      depth,
                 'run':        run,
                 'epoch':      epoch,
                 'train_loss': t_loss,
                 'val_loss':   v_loss
             })
-    
+
     df = pd.DataFrame(records)
-    
-    if save_csv is not None:
+    if save_csv:
         df.to_csv(save_csv, index=False)
-    
     return df
+
