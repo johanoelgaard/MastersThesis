@@ -26,25 +26,25 @@ penalty_en = gamma * (np.abs(T1) + np.abs(T2)) + (1 - gamma) * (T1**2 + T2**2)
 # --- 3) Plotting ---
 fig, axes = plt.subplots(1, 3)
 
-# Ridge (ℓ₂)
+# Lasso (l1)
 axes[0].contour(T1, T2, J, levels=np.linspace(0.1, 4, 8))   # no clabel here
-theta = np.linspace(0, 2 * np.pi, 200)
-axes[0].plot(np.cos(theta), np.sin(theta), 'r-', linewidth=2)
+x = np.linspace(-1, 1, 200)
+axes[0].plot(x, 1 - np.abs(x), 'r-', linewidth=2)
+axes[0].plot(x, -1 + np.abs(x), 'r-', linewidth=2)
 axes[0].scatter(opt1, opt2, color='blue', marker='x', s=100, label='Optimum')
-axes[0].set_title(r"Ridge ($\ell_2$)")
+axes[0].set_title(r"Lasso ($\ell_1$)")
 axes[0].set_xlabel(r"$\theta_1$")
 axes[0].set_ylabel(r"$\theta_2$")
 axes[0].legend()
 axes[0].axhline(0, linewidth=0.5)
 axes[0].axvline(0, linewidth=0.5)
 
-# Lasso (ℓ₁)
+# Ridge (l2)
 axes[1].contour(T1, T2, J, levels=np.linspace(0.1, 4, 8))   # no clabel here
-x = np.linspace(-1, 1, 200)
-axes[1].plot(x, 1 - np.abs(x), 'r-', linewidth=2)
-axes[1].plot(x, -1 + np.abs(x), 'r-', linewidth=2)
+theta = np.linspace(0, 2 * np.pi, 200)
+axes[1].plot(np.cos(theta), np.sin(theta), 'r-', linewidth=2)
 axes[1].scatter(opt1, opt2, color='blue', marker='x', s=100, label='Optimum')
-axes[1].set_title(r"Lasso ($\ell_1$)")
+axes[1].set_title(r"Ridge ($\ell_2$)")
 axes[1].set_xlabel(r"$\theta_1$")
 axes[1].set_ylabel(r"$\theta_2$")
 axes[1].legend()
@@ -54,9 +54,9 @@ axes[1].axvline(0, linewidth=0.5)
 # Elastic Net
 axes[2].contour(T1, T2, J, levels=np.linspace(0.1, 4, 8))   # no clabel here either
 ce = axes[2].contour(T1, T2, penalty_en, levels=[1], colors='r', linewidths=2)
-axes[2].clabel(ce, fmt={1: 'α·∥θ∥₁+(1-α)·∥θ∥₂²=1'}, fontsize=12)  # only label the EN curve
+axes[2].clabel(ce, fmt={1: '\lambda_{\ell_1}\vert \vert \theta \vert \vert_1 + \lambda_{\ell_2}\vert \vert \theta \vert \vert_2^2 = 1'}, fontsize=12)  # only label the EN curve
 axes[2].scatter(opt1, opt2, color='blue', marker='x', s=100, label='Optimum')
-axes[2].set_title(r"Elastic Net ($\gamma=0.5$)")
+axes[2].set_title(r"Elastic Net ($\lambda_{\ell_1}=\lambda_{\ell_2}$)")
 axes[2].set_xlabel(r"$\theta_1$")
 axes[2].set_ylabel(r"$\theta_2$")
 axes[2].legend()
@@ -64,6 +64,6 @@ axes[2].axhline(0, linewidth=0.5)
 axes[2].axvline(0, linewidth=0.5)
 
 # ensure the directory exists and save
-plt.savefig("../figs/contours.png", dpi=300, bbox_inches="tight")
+plt.savefig("figs/contours.png", dpi=300, bbox_inches="tight")
 
 plt.show()
