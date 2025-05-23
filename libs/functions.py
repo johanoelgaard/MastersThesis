@@ -814,21 +814,15 @@ def amadl_elementwise(yhat, y, delta=0.5):
 def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
     """
     Turn a history_size dict into a “long” pandas DataFrame,
-    handling both single‐width and pyramid (multi‐width) models.
-    
-    Any key matching:
-        l1{l1}_l2{l2}_drop{drop}_lr{lr}_w{w_spec}[_d{d}]_run{run}
-    where w_spec is either:
-       - digits only, e.g. "32"
-       - a Python‐list literal, e.g. "[32, 16, 8, 4]"
+    accurately reading both widths and explicit depths.
     """
     pattern = re.compile(
         r'^l1(?P<l1>[\d\.e\-]+)'
       + r'_l2(?P<l2>[\d\.e\-]+)'
       + r'_drop(?P<drop>[\d\.e\-]+)'
       + r'_lr(?P<lr>[\d\.e\-]+)'
-      + r'_w(?P<w>\[?[\d,\s]+\]?)'       # captures either "32" or "[32, 16, 8, 4]"
-      + r'(?:_d(?P<d>\d+))?'            # optional depth tag
+      + r'_w(?P<w>\[?[\d,\s]+\]?)'       # "32" or "[32, 16, 8, 4]"
+      + r'_d(?P<d>\d+)'                  # explicit depth tag (always present)
       + r'_run(?P<run>\d+)$'
     )
 
@@ -836,7 +830,8 @@ def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
     for name, hist in history_dict.items():
         m = pattern.match(name)
         if not m:
-            continue  # skip non‐matching keys
+            # skip names that don't follow convention
+            continue
 
         p = m.groupdict()
         l1   = float(p['l1'])
@@ -844,16 +839,17 @@ def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
         drop = float(p['drop'])
         lr   = float(p['lr'])
         run  = int(p['run'])
+        depth= int(p['d'])                 # parse depth directly
 
-        # parse widths: if it looks like "[...]" eval it, else wrap as single‐item list
+        # parse widths: literal_eval if bracketed, else single value
         w_spec = p['w']
         if w_spec.startswith('['):
-            widths = ast.literal_eval(w_spec)      # e.g. [32,16,8,4]
+            widths = ast.literal_eval(w_spec)
         else:
-            widths = [int(w_spec)]                 # e.g. [32]
+            widths = [int(w_spec)]
 
-        depth = len(widths)
 
+        # build one record per epoch
         for epoch, (t_loss, v_loss) in enumerate(
                 zip(hist['train_loss'], hist['val_loss']), start=1):
             records.append({
@@ -874,4 +870,3 @@ def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
     if save_csv:
         df.to_csv(save_csv, index=False)
     return df
-
