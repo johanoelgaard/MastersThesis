@@ -54,7 +54,7 @@ axes[1].axvline(0, linewidth=0.5)
 # Elastic Net
 axes[2].contour(T1, T2, J, levels=np.linspace(0.1, 4, 8))   # no clabel here either
 ce = axes[2].contour(T1, T2, penalty_en, levels=[1], colors='r', linewidths=2)
-axes[2].clabel(ce, fmt={1: '\lambda_{\ell_1}\vert \vert \theta \vert \vert_1 + \lambda_{\ell_2}\vert \vert \theta \vert \vert_2^2 = 1'}, fontsize=12)  # only label the EN curve
+axes[2].clabel(ce, fmt={1: r'\lambda_{\ell_1}\vert \vert \theta \vert \vert_1 + \lambda_{\ell_2}\vert \vert \theta \vert \vert_2^2 = 1'}, fontsize=12)
 axes[2].scatter(opt1, opt2, color='blue', marker='x', s=100, label='Optimum')
 axes[2].set_title(r"Elastic Net ($\lambda_{\ell_1}=\lambda_{\ell_2}$)")
 axes[2].set_xlabel(r"$\theta_1$")
@@ -63,7 +63,6 @@ axes[2].legend()
 axes[2].axhline(0, linewidth=0.5)
 axes[2].axvline(0, linewidth=0.5)
 
-# ensure the directory exists and save
-plt.savefig("figs/contours.png", dpi=300, bbox_inches="tight")
+plt.savefig(r"C:\Users\AskeElsøeEngmark\PycharmProjects\MastersThesis\figs\contours.png", dpi=300, bbox_inches='tight')
 
 plt.show()
