@@ -101,7 +101,7 @@ ax2.axvline(best_idx, color='green', linestyle='--',
             label=f'Best Model at iter {best_idx}')
 ax2.axvline(stop_idx, color='red', linestyle=':',
             label=f'Patience reached at iter {stop_idx}')
-ax2.set_title('Training vs Validation Loss')
+ax2.set_title('Training & Validation Loss')
 ax2.set_xlabel('Iteration')
 ax2.set_ylabel('Loss')
 ax2.legend()
