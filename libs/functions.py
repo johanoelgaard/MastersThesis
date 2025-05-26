@@ -491,7 +491,7 @@ def latex_table_grouped(models, metrics, p_values=False):
         for i, (label, values) in enumerate(entries):
             row = ""
             if i == 0:
-                row += f"\\multirow[c]{{{n_rows}}}{{*}}{{\\rotatebox{{90}}{{{group}}}}}"
+                row += f"\\multirow[c]{{{n_rows}}}{{*}}{{\\rotatebox{{90}}{{{group}}}}} \n"
             else:
                 row += " "
             row += f"& {label} & "
@@ -870,3 +870,7 @@ def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
     if save_csv:
         df.to_csv(save_csv, index=False)
     return df
+
+
+def deciles(x):
+    return pd.qcut(x, 10, labels=False, duplicates='drop')
