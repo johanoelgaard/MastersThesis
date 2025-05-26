@@ -9,6 +9,8 @@ from scipy.stats import chi2
 import math
 import ast
 import torch
+import torch.nn as nn
+from typing import Dict, Callable
 
 
 def first_valid(row, columns):
@@ -870,6 +872,94 @@ def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
     df = pd.DataFrame(records)
     if save_csv:
         df.to_csv(save_csv, index=False)
+    return df
+
+def flatten_history_activ(
+    history_dict: Dict[str, Dict[str, list]],
+    save_csv: str = None
+) -> pd.DataFrame:
+    """
+    Turn a history dict into a “long” pandas DataFrame,
+    accurately reading widths, explicit depths, and activation functions.
+    
+    Parameters
+    ----------
+    history_dict
+        mapping from names like
+        'l11e-3_l20_lambda_drop0.5_lr1e-3_w[32,16]_d4_run1_activReLU'
+        to {'train_loss': [...], 'val_loss': [...]}
+    activ_map
+        e.g. {'ReLU': nn.ReLU, 'LeakyReLU': nn.LeakyReLU, ...}
+    save_csv
+        if given, write the resulting DataFrame to this CSV path
+    
+    Returns
+    -------
+    pd.DataFrame
+        columns = [
+          'l1','l2','dropout','lr','widths','widths_str',
+          'depth','run','epoch','train_loss','val_loss',
+          'activ_name','activ_fn'
+        ]
+    """
+
+    pattern = re.compile(
+          r'^l1(?P<l1>[\d\.e\-]+)'
+        + r'_l2(?P<l2>[\d\.e\-]+)'
+        + r'_drop(?P<drop>[\d\.e\-]+)'
+        + r'_lr(?P<lr>[\d\.e\-]+)'
+        + r'_w(?P<w>\[?[\d,\s]+\]?)'
+        + r'_d(?P<d>\d+)'
+        + r'_run(?P<run>\d+)'
+        + r'_activ(?P<activ>[A-Za-z0-9]+)$'
+    )
+
+    records = []
+    for name, hist in history_dict.items():
+        m = pattern.match(name)
+        if not m:
+            # skip any keys that don’t match the expected pattern
+            continue
+
+        p = m.groupdict()
+        l1         = float(p['l1'])
+        l2         = float(p['l2'])
+        drop       = float(p['drop'])
+        lr         = float(p['lr'])
+        run        = int(p['run'])
+        depth      = int(p['d'])
+        activ_name = p['activ']
+
+        # parse widths (either "[32, 16]" or "32")
+        w_spec = p['w']
+        if w_spec.startswith('['):
+            widths = ast.literal_eval(w_spec)
+        else:
+            widths = [int(w_spec)]
+
+        # one row per epoch
+        for epoch, (t_loss, v_loss) in enumerate(
+                zip(hist['train_loss'], hist['val_loss']), start=1):
+            records.append({
+                'l1':          l1,
+                'l2':          l2,
+                'dropout':     drop,
+                'lr':          lr,
+                'widths':      widths,
+                'widths_str':  w_spec,
+                'depth':       depth,
+                'run':         run,
+                'epoch':       epoch,
+                'train_loss':  t_loss,
+                'val_loss':    v_loss,
+                'activ_name':  activ_name,
+            })
+
+    df = pd.DataFrame(records)
+
+    if save_csv:
+        df.to_csv(save_csv, index=False)
+
     return df
 
 
