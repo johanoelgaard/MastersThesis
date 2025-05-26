@@ -8,6 +8,7 @@ from scipy import stats
 from scipy.stats import chi2
 import math
 import ast
+import torch
 
 
 def first_valid(row, columns):
@@ -874,3 +875,51 @@ def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
 
 def deciles(x):
     return pd.qcut(x, 10, labels=False, duplicates='drop')
+
+
+def mse_torch(y_true, y_pred):
+    return torch.sum((y_true - y_pred) ** 2)
+
+def importance_nn(model, X, y, device):
+    model.eval()
+    with torch.no_grad():
+        X_t = torch.tensor(X, dtype=torch.float32, device=device)
+        y_t = torch.tensor(y, dtype=torch.float32, device=device)
+        base = mse_torch(y_t, model(X_t)).item()
+
+        imp = np.zeros(X.shape[1])
+        for j in range(X.shape[1]):
+            Xz = X_t.clone();  Xz[:, j] = 0.
+            imp[j] = mse_torch(y_t, model(Xz)).item() - base
+    imp = np.clip(imp, 0, None)
+    if imp.sum() > 0: imp /= imp.sum()
+    return imp
+
+def importance_lin(beta, X, y, const=None, feature=None):
+    y_hat  = X @ beta 
+    base   = ((y - y_hat) ** 2).sum()
+
+    # contribution of each regressor
+    imp = np.zeros_like(beta)
+    for j in range(len(beta)):
+        if beta[j] == 0:        # skip early for sparsity in LASSO
+            continue
+        elif const is not None and feature[j] == const: # skip constant term
+            continue
+        y_hat_minus_j = y_hat - X[:, j] * beta[j]
+        mse_j = ((y - y_hat_minus_j) ** 2).sum()
+        imp[j] = mse_j - base
+
+    imp = np.clip(imp, 0, None)
+    
+    # drop constant term if present
+    if const is not None:
+        const_idx = feature.index(const)
+        imp = np.delete(imp, const_idx)
+
+    if imp.sum() > 0: imp /= imp.sum()
+    return imp
+
+def group_label(name: str) -> str:
+    base = name.split('_x_', 1)[0]
+    return 'NACE' if base.startswith('NACE_') else base
