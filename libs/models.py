@@ -6,6 +6,7 @@ from scipy.stats import t
 import numpy as np
 import torch.nn.init as init
 import copy
+import time
 
 class MLPdataset(Dataset):
     """
@@ -102,6 +103,7 @@ def train_mlp(
     shuffle_train: bool = True,
     shuffle_val: bool = False,
     save_path: str = None,
+    timing = False, # if True, measure training time
 ):
     """
     Train a PyTorch MLP model with L1/L2 regularization and early stopping.
@@ -150,8 +152,11 @@ def train_mlp(
     best_state = None
     counter = 0
     history = {'train_loss': [], 'val_loss': []}
-
+    if timing:
+        time_ = []
     for epoch in range(1, epochs + 1):
+        if timing:
+            t0 = time.perf_counter()
         model.to(device).train()
         train_loss = 0.0
 
@@ -188,7 +193,9 @@ def train_mlp(
             print(f"Epoch {epoch}/{epochs}  "
                   f"- Train Loss: {train_loss:.5E}  "
                   f"- Val Loss: {val_loss:.5E}")
-
+        if timing:
+            t1 = time.perf_counter()
+            time_.append(t1 - t0)
         # early stopping
         if val_loss < best_val_loss:
             best_val_loss = val_loss
@@ -209,8 +216,11 @@ def train_mlp(
     if save_path is not None:
         torch.save(model.state_dict(), save_path)
         print(f"Model saved to {save_path}")
-
-    return model, history
+    
+    if timing:
+        return model, history, time_
+    else:
+        return model, history
 
 def predict_mlp(
     model: torch.nn.Module,
