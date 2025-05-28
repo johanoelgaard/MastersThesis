@@ -133,8 +133,8 @@ def train_mlp(
         history    (dict):       {'train_loss': [...], 'val_loss': [...]}
     """
     # reproducibility
-    np.random.seed(42)
-    torch.manual_seed(42)
+    # np.random.seed(42)
+    # torch.manual_seed(42)
 
     # data loaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size,
