@@ -1092,3 +1092,94 @@ def importance_lin(beta, X, y, const=None, feature=None):
 def group_label(name: str) -> str:
     base = name.split('_x_', 1)[0]
     return 'NACE' if base.startswith('NACE_') else base
+
+def assign_decile(df, model, n_deciles=10):
+    return (
+        df.groupby('timestamp')[model]
+          .transform(lambda x: pd.qcut(x, n_deciles, labels=False) + 1)
+    )
+
+def turnover_exact(weights_df, asset_ret_df):
+    """
+    Exact turnover per Gu et al.:
+      weights_df: DataFrame indexed by timestamp, cols=ticker, weights at t
+      asset_ret_df: DataFrame indexed by timestamp, cols=ticker, returns at t
+    """
+    to_list = []
+    dates = weights_df.index
+    for i in range(len(dates) - 1):
+        t0, t1 = dates[i], dates[i+1]
+        w_old = weights_df.loc[t0]
+        w_new = weights_df.loc[t1]
+        r     = asset_ret_df.loc[t1]
+        R     = (w_old * r).sum()
+        scaled_old = w_old * (1 + r) / (1 + R)
+        to_list.append(0.5 * np.abs(w_new - scaled_old).sum())
+    return np.mean(to_list) * 100  # percent
+
+def max_drawdown(r):
+    """Max drawdown of a return series (as decimal)."""
+    wealth = (1 + r).cumprod()
+    peak   = wealth.cummax()
+    dd     = (peak - wealth) / peak
+    return dd.max()
+
+def portfolio_panel(tbl, model_groups, float_fmt="{:.3f}"):
+    """
+    tbl : dict of DataFrames keyed by model name
+           each DF indexed by [1..quantiles, 'High','Low','H-L']
+           columns = ['Pred','Avg','SD','SR']
+    model_groups : list of two lists, e.g. [['ols','lasso'], ['mlp','mlp-pyr']]
+    """
+    assert len(model_groups)==2, "Need exactly two panels"
+    lines = []
+
+    align = "l" + "rrrr"*(len(model_groups[0]))
+
+    lines.append(f"\\begin{{tabular}}{{{align}}}")
+    lines.append("\\hline \\hline \\\\ [-1.8ex]")
+    
+    def panel_header(models):
+        # blank under Decile, then spans for each model
+        spans = " & ".join(f"\\multicolumn{{4}}{{c}}{{{m}}}" for m in models)
+        lines.append(f" & {spans} \\\\")
+        # cmidrule under each block
+        start = 2
+        rules = []
+        for m in models:
+            rules.append(f"\\cmidrule(lr){{{start}-{start+3}}}")
+            start += 4
+        lines.append(" " + " ".join(rules))
+        # subheader
+        sub = " & ".join(["Pred & Avg & SD & SR"]*len(models))
+        lines.append(f"Decile & {sub} \\\\")
+        lines.append("\\midrule")
+    
+    # Panel 1
+    panel_header(model_groups[0])
+    # body rows
+    order = list(tbl[model_groups[0][0]].index)
+    for row in order:
+        cells = []
+        for m in model_groups[0]:
+            vals = tbl[m].loc[row, ['Pred','Avg','SD','SR']]
+            cells.append(" & ".join(float_fmt.format(v) for v in vals))
+        lines.append(f"{row} & " + " & ".join(cells) + " \\\\")
+    
+    # midrule separator
+    lines.append("\\midrule")
+    
+    # Panel 2
+    panel_header(model_groups[1])
+    for row in order:
+        cells = []
+        for m in model_groups[1]:
+            vals = tbl[m].loc[row, ['Pred','Avg','SD','SR']]
+            cells.append(" & ".join(float_fmt.format(v) for v in vals))
+        lines.append(f"{row} & " + " & ".join(cells) + " \\\\")
+    
+    # bottom
+    lines.append("\\hline \\hline")
+    lines.append("\\end{tabular}")
+    # lines.append("\\end{table}")
+    return "\n".join(lines)
