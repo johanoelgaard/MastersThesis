@@ -888,8 +888,6 @@ def flatten_history_activ(
         mapping from names like
         'l11e-3_l20_lambda_drop0.5_lr1e-3_w[32,16]_d4_run1_activReLU'
         to {'train_loss': [...], 'val_loss': [...]}
-    activ_map
-        e.g. {'ReLU': nn.ReLU, 'LeakyReLU': nn.LeakyReLU, ...}
     save_csv
         if given, write the resulting DataFrame to this CSV path
     
@@ -954,6 +952,11 @@ def flatten_history_activ(
                 'val_loss':    v_loss,
                 'activ_name':  activ_name,
             })
+    df = pd.DataFrame(records)
+    if save_csv:
+        df.to_csv(save_csv, index=False)
+
+    return df
 
 def flatten_history_crit(
     history_dict: Dict[str, Dict[str, list]],
@@ -969,8 +972,6 @@ def flatten_history_crit(
         mapping from names like
         'l11e-3_l20_lambda_drop0.5_lr1e-3_w[32,16]_d4_run1_critMSE'
         to {'train_loss': [...], 'val_loss': [...]}
-    crit_map
-        e.g. {'MSE': nn.MSELoss(), 'MAE': nn.L1Loss(), ...}
     save_csv
         if given, write the resulting DataFrame to this CSV path
     
@@ -1042,9 +1043,6 @@ def flatten_history_crit(
         df.to_csv(save_csv, index=False)
 
     return df
-
-def deciles(x):
-    return pd.qcut(x, 10, labels=False, duplicates='drop')
 
 def mse_torch(y_true, y_pred):
     return torch.sum((y_true - y_pred) ** 2)
