@@ -1122,35 +1122,34 @@ def max_drawdown(r):
     dd     = (peak - wealth) / peak
     return dd.max()
 
-def portfolio_panel(tbl, model_groups, float_fmt="{:.3f}"):
+def portfolio_panel(tbl, model_groups, col_names, float_fmt="{:.3f}"):
     """
     tbl : dict of DataFrames keyed by model name
            each DF indexed by [1..quantiles, 'High','Low','H-L']
            columns = ['Pred','Avg','SD','SR']
     model_groups : list of two lists, e.g. [['ols','lasso'], ['mlp','mlp-pyr']]
     """
-    assert len(model_groups)==2, "Need exactly two panels"
     lines = []
 
-    align = "l" + "rrrr"*(len(model_groups[0]))
+    align = "l" + "r"*(len(col_names))*(len(model_groups[0]))
 
     lines.append(f"\\begin{{tabular}}{{{align}}}")
     lines.append("\\hline \\hline \\\\ [-1.8ex]")
     
     def panel_header(models):
-        # blank under Decile, then spans for each model
-        spans = " & ".join(f"\\multicolumn{{4}}{{c}}{{{m}}}" for m in models)
+        # blank under decile, then spans for each model
+        spans = " & ".join(f"\\multicolumn{{{len(col_names)}}}{{c}}{{{m}}}" for m in models)
         lines.append(f" & {spans} \\\\")
         # cmidrule under each block
         start = 2
         rules = []
         for m in models:
-            rules.append(f"\\cmidrule(lr){{{start}-{start+3}}}")
-            start += 4
+            rules.append(f"\\cmidrule(lr){{{start}-{start+len(col_names)-1}}}")
+            start += len(col_names)
         lines.append(" " + " ".join(rules))
         # subheader
-        sub = " & ".join(["Pred & Avg & SD & SR"]*len(models))
-        lines.append(f"Decile & {sub} \\\\")
+        sub = " & ".join(col_names*len(models))
+        lines.append(f"  & {sub} \\\\")
         lines.append("\\midrule")
     
     # Panel 1
@@ -1160,24 +1159,45 @@ def portfolio_panel(tbl, model_groups, float_fmt="{:.3f}"):
     for row in order:
         cells = []
         for m in model_groups[0]:
-            vals = tbl[m].loc[row, ['Pred','Avg','SD','SR']]
+            vals = tbl[m].loc[row, col_names]
             cells.append(" & ".join(float_fmt.format(v) for v in vals))
         lines.append(f"{row} & " + " & ".join(cells) + " \\\\")
     
     # midrule separator
-    lines.append("\\midrule")
     
-    # Panel 2
-    panel_header(model_groups[1])
-    for row in order:
-        cells = []
-        for m in model_groups[1]:
-            vals = tbl[m].loc[row, ['Pred','Avg','SD','SR']]
-            cells.append(" & ".join(float_fmt.format(v) for v in vals))
-        lines.append(f"{row} & " + " & ".join(cells) + " \\\\")
-    
+    if len(model_groups) > 1:
+        for models in model_groups[1:]:
+            lines.append("\\midrule")
+            panel_header(models)
+            for row in order:
+                cells = []
+                for m in models:
+                    vals = tbl[m].loc[row, col_names]
+                    cells.append(" & ".join(float_fmt.format(v) for v in vals))
+                lines.append(f"{row} & " + " & ".join(cells) + " \\\\")
+
     # bottom
     lines.append("\\hline \\hline")
     lines.append("\\end{tabular}")
     # lines.append("\\end{table}")
     return "\n".join(lines)
+
+def stats_for_series(r_ts, w_df, asset_ret):
+    return {
+        'Max DD, %':      100 * max_drawdown(r_ts),
+        'Max 1M loss, %': -100 * r_ts.min(),
+        'Turnover, %':    turnover_exact(w_df, asset_ret)
+    }
+
+def equal_weight_matrix(df, dec_col):
+    """
+    Return weights_df: DataFrame indexed by timestamp, cols=ticker,
+    weights = 1/N_t for all tickers in the given decile at that timestamp,
+    0 otherwise.
+    """
+    w = (df.assign(tmp=1)
+          .pivot_table(index='timestamp', columns='ticker',
+                       values='tmp', aggfunc='sum')
+          .fillna(0))
+    # normalize so row sums to 1 (for those dates where sum>0)
+    return w.div(w.sum(axis=1).replace(0, np.nan), axis=0).fillna(0)
