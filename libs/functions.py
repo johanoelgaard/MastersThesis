@@ -86,14 +86,11 @@ def extract_nace(row, cols):
     # Sort by numeric value using Decimal
     return sorted(combined, key=lambda x: Decimal(x))
 
-
-
 def rolling_beta(g):
     g = g.sort_index()
     cov = g['stkre'].rolling('365D').cov(g['mktre'], ddof=0)
     var = g['mktre'].rolling('365D').var()
     return cov.divide(var)
-
 
 def expand_monthly(row):
     # build a monthly DateTimeIndex from timestamp up to (but not including) period_end
@@ -364,53 +361,6 @@ def serial_corr(y, x, T):
     
     # calculate the serial correlation
     return estimate(e, e_l,T=T-1,robust=True)
-
-
-# def diebold_mariano_test(actuals, forecast1, forecast2, loss_function='mse', h=1):
-#     """
-#     Performs the Diebold-Mariano test for predictive accuracy.
-
-#     Args:
-#         actuals (array): Actual observed values.
-#         forecast1 (array): First forecast to compare.
-#         forecast2 (array): Second forecast to compare.
-#         loss_function (str): The loss function to use ('mse' or 'mae').
-#         h (int): Forecast horizon, default is 1 (single-step forecast).
-
-#     Returns:
-#         DM statistic and p-value.
-#     """
-#     # Compute forecast errors
-#     error1 = actuals - forecast1
-#     error2 = actuals - forecast2
-
-#     # Choose the loss function
-#     if loss_function == 'mse':
-#         diff = error1**2 - error2**2
-#     elif loss_function == 'mae':
-#         diff = np.abs(error1) - np.abs(error2)
-#     else:
-#         raise ValueError("Unsupported loss function. Use 'mse' or 'mae'.")
-
-#     # Compute mean and variance of the loss differential
-#     mean_diff = np.mean(diff)
-#     n = len(diff)
-#     variance_diff = np.var(diff, ddof=1)
-
-#     # Correct variance for autocorrelation if h > 1
-#     if h > 1:
-#         autocov = np.correlate(diff, diff, mode='full') / n
-#         variance_diff += 2 * sum(autocov[n-1:n-1+h])
-
-#     # Compute DM statistic
-#     dm_stat = mean_diff / np.sqrt(variance_diff / n)
-
-#     # Compute p-value
-#     dof = n - 1  # Degrees of freedom
-#     p_value = 2 * (1 - t.cdf(abs(dm_stat), df=dof))  # Two-tailed test
-
-#     return dm_stat, p_value
-
 
 def latex_table(models, metrics, p_values=False):
     """
