@@ -76,13 +76,6 @@ class MLPModel(nn.Module):
         # bundle into a Sequential
         self.network = nn.Sequential(*layers)
 
-        # for module in self.network:
-        #     if isinstance(module, nn.Linear):
-        #         # Kaiming‐uniform tailored for ReLU activation:
-        #         nn.init.kaiming_uniform_(module.weight, nonlinearity="relu")
-        #         nn.init.zeros_(module.bias)
-
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.network(x)
 
