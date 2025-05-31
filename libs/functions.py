@@ -194,58 +194,6 @@ def variance(transform, SSR, x, T, residual, robust=False):
     se = np.sqrt(np.diag(cov)).reshape(-1, 1)
     return sigma2, cov, se, df
 
-def print_table(
-        labels: tuple,
-        results: dict,
-        headers=["", "Beta", "Se", "t-values"],
-        title="Results",
-        _lambda:float=None,
-        **kwargs
-    ) -> None:
-    """Prints a nice looking table, must at least have coefficients, 
-    standard errors and t-values. The number of coefficients must be the
-    same length as the labels.
-
-    Args:
-        >> labels (tuple): Touple with first a label for y, and then a list of 
-        labels for x.
-        >> results (dict): The results from a regression. Needs to be in a 
-        dictionary with at least the following keys:
-            'b_hat', 'se', 't_values', 'R2', 'sigma2'
-        >> headers (list, optional): Column headers. Defaults to 
-        ["", "Beta", "Se", "t-values"].
-        >> title (str, optional): Table title. Defaults to "Results".
-        _lambda (float, optional): Only used with Random effects. 
-        Defaults to None.
-    """
-    
-    # Unpack the labels
-    label_y, label_x = labels
-    
-    # Create table, using the label for x to get a variable's coefficient,
-    # standard error and t_value.
-    table = []
-    for i, name in enumerate(label_x):
-        row = [
-            name, 
-            results.get('b_hat')[i], 
-            results.get('se')[i], 
-            results.get('t_values')[i]
-        ]
-        table.append(row)
-    
-    # Print the table
-    print(title)
-    print(f"Dependent variable: {label_y}\n")
-    print(tabulate(table, headers, **kwargs))
-    
-    # Print extra statistics of the model.
-    print(f"R\u00b2 = {results.get('R2').item():.3f}")
-    print(f"\u03C3\u00b2 = {results.get('sigma2').item():.3f}")
-    if _lambda: 
-        print(f'\u03bb = {_lambda.item():.3f}')
-
-
 def perm( Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
     """Takes a transformation matrix and performs the transformation on 
     the given vector or matrix.
@@ -260,7 +208,7 @@ def perm( Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
     Returns:
         np.array: Returns the transformed vector or matrix.
     """
-    # We can infer t from the shape of the transformation matrix.
+    # infer t from the shape of the transformation matrix.
     M,T = Q_T.shape 
     N = int(A.shape[0]/T)
     K = A.shape[1]
@@ -275,7 +223,7 @@ def perm( Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
 
     return Z
 
-# Create function to check rank of demeaned matrix, and return its eigenvalues.
+# rank func for check of demeaned matrix and return eigen vals
 def check_rank(x):
     print(f'Rank of demeaned x: {la.matrix_rank(x)}')
     lambdas, V = la.eig(x.T@x)
@@ -283,28 +231,27 @@ def check_rank(x):
     print(f'Eigenvalues of within-transformed x: {lambdas.round(decimals=0)}')
     print(V) 
 
-# Create transformation matrix
+# transformation matrix
 def demeaning_matrix(T):
     Q_T = np.eye(T) - np.tile(1/T, (T, T))
     return Q_T
 
-# Create transformation matrix
+# transformation matrix
 def fd_matrix(T):
     D_T = np.eye(T) - np.eye(T, k=-1)
     D_T = D_T[1:]
     return D_T
 
-# define the wald test
 def wald(b, cov, r):
-    # define the restriction matrix
+    # restriction matrix
     R = np.ones((1, b.shape[0]))
 
     beta_sum = R @ b
 
-    # Calculate the Wald statistic
+    # Wald statistic
     W = (R @ b - r).T @ la.inv(R @ cov @ R.T) @ (R @ b - r)
     
-    # Calculate the p-value
+    # p-value
     p_val = 1 - chi2.cdf(W.item(), R.shape[0])
 
     return beta_sum, W, p_val
@@ -580,22 +527,6 @@ def replace_scientific(m):
     # otherwise emit the ×10^n
     return f"${mant} \\cdot 10^{{{exp_int}}}$"
 
-def qlike_fun(yhat, y):
-    """
-    Computes the QLIKE error
-
-    Args:
-        yhat (np.ndarray): Forecasted values.
-        y (np.ndarray): Actual values.
-
-    Returns:
-        float: QLIKE error value.
-    """
-    # Ensure yhat and y are numpy arrays
-    yhat = np.array(yhat)
-    y = np.array(y)
-    return np.mean(np.log(yhat) - (y / yhat))
-
 def mae_fun(yhat, y):
     """
     Computes the Mean Absolute Error (MAE)
@@ -611,38 +542,6 @@ def mae_fun(yhat, y):
     yhat = np.array(yhat)
     y = np.array(y)    
     return np.mean(np.abs(y - yhat))
-
-def smape_fun(yhat, y):
-    """
-    Computes the Symmetric Mean Absolute Percentage Error (sMAPE)
-
-    Args:
-        yhat (np.ndarray): Forecasted values.
-        y (np.ndarray): Actual values.
-
-    Returns:
-        float: sMAPE value.
-    """
-    # Ensure yhat and y are numpy arrays
-    yhat = np.array(yhat)
-    y = np.array(y)    
-    return np.mean(np.abs(y - yhat) / (np.abs(y) + np.abs(yhat))) * 100
-
-def mape_fun(yhat, y):
-    """
-    Computes the Mean Absolute Percentage Error (MAPE)
-
-    Args:
-        yhat (np.ndarray): Forecasted values.
-        y (np.ndarray): Actual values.
-
-    Returns:
-        float: MAPE value.
-    """
-    # Ensure yhat and y are numpy arrays
-    yhat = np.array(yhat)
-    y = np.array(y)    
-    return np.mean(np.abs((y - yhat) / y)) * 100
 
 def mse_fun(yhat, y):
     """
