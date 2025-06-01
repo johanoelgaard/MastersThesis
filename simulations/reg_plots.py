@@ -2,7 +2,6 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-# --- 1) Global settings for font sizes ---
 plt.rcParams.update({
     'figure.figsize': (18, 5),
     'axes.titlesize': 18,
@@ -12,7 +11,6 @@ plt.rcParams.update({
     'legend.fontsize': 14
 })
 
-# --- 2) Data setup ---
 theta1 = np.linspace(-2, 5, 400)
 theta2 = np.linspace(-2, 5, 400)
 T1, T2 = np.meshgrid(theta1, theta2)
@@ -23,7 +21,7 @@ J = ((T1 - opt1) / 2)**2 + (T2 - opt2)**2
 gamma = 0.5
 penalty_en = gamma * (np.abs(T1) + np.abs(T2)) + (1 - gamma) * (T1**2 + T2**2)
 
-# --- 3) Plotting ---
+# plot
 fig, axes = plt.subplots(1, 3)
 
 # Lasso (l1)
