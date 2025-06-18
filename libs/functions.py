@@ -635,6 +635,28 @@ def amadl_fun(yhat, y, delta=0.5):
                     + delta * (y - yhat) ** 2)
     return amadl
 
+def amadlt_fun(yhat, y, delta=0.5, k=20.0):
+    """
+    Computes the Augmented Mean Absolute Directional Loss (Hyperbolic Tangent) (AMADLT)
+
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+
+    Returns:
+        float: AMADLT value.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)
+
+    # Compute the AMADL
+    amadlt = np.mean((delta-1) 
+                    * np.tanh(k * yhat * y) 
+                    * np.abs(y) 
+                    + delta * (y - yhat) ** 2)
+    return amadlt
+
 def madl_elementwise(yhat, y):
     """
     Computes the Mean Absolute Directional Loss (MADL) element-wise.
@@ -662,6 +684,20 @@ def amadl_elementwise(yhat, y, delta=0.5):
     yhat = np.array(yhat)
     y = np.array(y)
     return (delta-1) * np.sign(yhat * y) * np.abs(y) + delta * (y-yhat)**2
+
+def amadlt_elementwise(yhat, y, delta=0.5, k=20.0):
+    """
+    Computes the Augmented Mean Absolute Directional Loss (Hyperbolic Tangent) (AMADLT) element-wise.
+    Args:
+        yhat (np.ndarray): Forecasted values.
+        y (np.ndarray): Actual values.
+    Returns:
+        np.ndarray: AMADLT values for each element.
+    """
+    # Ensure yhat and y are numpy arrays
+    yhat = np.array(yhat)
+    y = np.array(y)
+    return (delta-1) * np.tanh(k * yhat * y) * np.abs(y) + delta * (y-yhat)**2
 
 def flatten_history(history_dict, save_csv: str = None) -> pd.DataFrame:
     """

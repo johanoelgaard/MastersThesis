@@ -261,3 +261,37 @@ def predict_mlp(
         preds_arr = scaler.inverse_transform(preds_arr.reshape(-1, 1)).flatten()
     return preds_arr
 
+
+class AMADLTanhLoss(nn.Module):
+    """
+    AMADL with a tanh surrogate for the directional term.
+
+    Parameters
+    ----------
+    delta : float, optional (default = 0.5)
+        Mixing weight. delta = 1 → pure MSE, delta = 0 → pure directional term.
+    k     : float, optional (default = 20.0)
+        Sharpness of tanh. Larger k makes tanh(x) ≈ sign(x).
+    """
+    def __init__(self, delta: float = 0.5, k: float = 20.0):
+        super().__init__()
+        self.delta = delta
+        self.k     = k
+
+    def forward(self, yhat: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        """
+        Parameters
+        ----------
+        yhat : (batch, *) tensor - model predictions
+        y    : (batch, *) tensor - ground truth targets
+        """
+        d, k = self.delta, self.k
+
+        # smooth "sign": tanh(k * yhat * y)
+        directional = torch.tanh(k * yhat * y) * torch.abs(y)
+
+        # full AMADL-tanh loss
+        loss = ( (d - 1.0) * directional +
+                 d * (y - yhat).pow(2) )
+
+        return loss.mean()
