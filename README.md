@@ -8,3 +8,6 @@ The Python code is written and run through a Python 3.11.8 distribution and requ
 - scipy (1.15.2)
 - scikit-learn (1.5.2)
 - torch (2.3.1)
+
+We are aware that there are some errors in the original thesis, to the best of our knowledge they have been fixed in the tabs and figs in the repo.
+However, we are not going to update the PDF as it is the originally submitted thesis.
